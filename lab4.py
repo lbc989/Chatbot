@@ -37,7 +37,11 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 
 def hello(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Good day!')
+    if update.message is None:
+        return
+    user_input = update.message.text
+    if user_input.startswith("/hello "):
+        update.message.reply_text("Good day, " + user_input[7:] + "!")
 
 def add(update: Update, context: CallbackContext) -> None:
     try:
