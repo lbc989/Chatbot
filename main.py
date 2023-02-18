@@ -72,7 +72,19 @@ class ChatGPT3TelegramBot:
 
     # Help menu
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        await update.message.reply_text("/start - Start the bot\n/reset - Reset conversation\n/help - Help menu")
+        await update.message.reply_text(
+            "/start - Start the bot\n/reset - Reset conversation\n/help - Help menu\n/send - send to bot owner\n/reply - send msg to id")
+
+    async def sendMsg(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        msg = context.args[0]  # /add keyword <-- this should store the keyword
+        await context.bot.send_message(chat_id=601632732,
+                                       text=f'{update.message.from_user.id} {update.message.from_user.name} said: ' + msg)
+        await update.message.reply_text('You have sent ' + msg + ' to the owner.')
+
+    async def replyMsg(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        id = context.args[0]
+        msg = context.args[1]
+        await context.bot.send_message(chat_id=id, text=msg)
 
     async def add(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
@@ -166,6 +178,8 @@ class ChatGPT3TelegramBot:
         # Please add your TelegramBot token between "" below.
         application = ApplicationBuilder().token("").build()
         application.add_handler(CommandHandler("add", self.add))
+        application.add_handler(CommandHandler("send", self.sendMsg))
+        application.add_handler(CommandHandler("reply", self.replyMsg))
         application.add_handler(CommandHandler('start', self.start))
         application.add_handler(CommandHandler('reset', self.reset))
         application.add_handler(CommandHandler('help', self.help))
