@@ -1,4 +1,4 @@
-   name: Python safety check  				# the name of this work flow
+   name: python-safety-check  				# the name of this work flow
    on: [push]  
    # Specify the event that automatically triggers the workflow file. This example uses the push event, so that the jobs run every time someone pushes a change to the repository
    
