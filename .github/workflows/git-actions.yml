@@ -1,19 +1,26 @@
-name: Python safety check
+  name: python-safety-check  				# the name of this work flow
+  on: [push]  
+   # Specify the event that automatically triggers the workflow file. This example uses the push event, so that the jobs run every time someone pushes a change to the repository
+   
+  env:
+    DEP_PATH: src/requirements.txt
 
-on:
-  push:
-    branches:
-      - master
+  jobs:  								# gather all the jobs that run in the workflow
+    my-job:
+      runs-on: ubuntu-latest   		# Set the type of machine to run on
+      steps:
+        - uses: actions/checkout@v2   # Step 1: Checks out a copy of your repository on the ubuntu-latest machine
 
-env:
-  DEP_PATH: src/requirements.txt
+        - name: Say Hello World       # Step 2: Type the word 'Hello World'
+          run: echo 'Hello World'  	
+          
+        - name: Check out master
+          uses: actions/checkout@master
+        
+        - name: Security vulnerabilities scan
+          uses: aufdenpunkt/python-safety-check@master
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out master
-        uses: actions/checkout@master
-
-      - name: Security vulnerabilities scan
-        uses: aufdenpunkt/python-safety-check@master
+        - name: View a file           # Step 3: Two sub-steps involved
+          run: |
+            echo 'Viewing the file: '   
+            cat requirements.txt 
