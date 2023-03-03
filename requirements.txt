@@ -2,3 +2,4 @@ python-telegram-bot[webhooks]==20.1
 configparser
 redis
 openai
+safety
