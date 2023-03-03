@@ -3,7 +3,7 @@
    # Specify the event that automatically triggers the workflow file. This example uses the push event, so that the jobs run every time someone pushes a change to the repository
    
   env:
-    DEP_PATH: src/requirements.txt
+    DEP_PATH: requirements.txt
 
   jobs:  								# gather all the jobs that run in the workflow
     my-job:
