@@ -7,62 +7,41 @@ import telegram.constants
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
-openai.api_key = ""
-chat_language = "en"  # os.getenv("INIT_LANGUAGE", default = "zh")
+openai.api_key = "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"
 
 MSG_LIST_LIMIT = 20  # int(os.getenv("MSG_LIST_LIMIT", default = 20))
-LANGUAGE_TABLE = {
-    "zh": "你好！",
-    "en": "Hello!"
-}
-
-
-class Prompts:
-    def __init__(self):
-        self.msg_list = []
-        self.msg_list.append(f"AI:{LANGUAGE_TABLE[chat_language]}")
-
-    def add_msg(self, new_msg):
-        if len(self.msg_list) >= MSG_LIST_LIMIT:
-            self.remove_msg()
-        self.msg_list.append(new_msg)
-
-    def remove_msg(self):
-        self.msg_list.pop(0)
-
-    def generate_prompt(self):
-        return '\n'.join(self.msg_list)
 
 
 class ChatGPT:
     def __init__(self):
-        self.prompt = Prompts()
-        self.model = "text-davinci-003"  # os.getenv("OPENAI_MODEL", default = "text-davinci-003")
+        self.model = "gpt-3.5-turbo-0301"  # os.getenv("OPENAI_MODEL", default = "text-davinci-003")
         self.temperature = 0.9  # float(os.getenv("OPENAI_TEMPERATURE", default = 0))
+        self.top_p = 1  # float(os.getenv("OPENAI_TEMPERATURE", default = 0))
         self.frequency_penalty = 0  # float(os.getenv("OPENAI_FREQUENCY_PENALTY", default = 0))
-        self.presence_penalty = 0.6  # float(os.getenv("OPENAI_PRESENCE_PENALTY", default = 0.6))
-        self.max_tokens = 240  # int(os.getenv("OPENAI_MAX_TOKENS", default = 240))
+        self.presence_penalty = 0  # float(os.getenv("OPENAI_PRESENCE_PENALTY", default = 0.6))
+        self.max_tokens = 1000  # int(os.getenv("OPENAI_MAX_TOKENS", default = 240))
 
-    def get_response(self):
-        response = openai.Completion.create(
+    def get_response(self, user_message):
+        response = openai.ChatCompletion.create(
             model=self.model,
-            prompt=self.prompt.generate_prompt(),
+            # prompt=self.prompt.generate_prompt(),
+            messages=[
+                {"role": "user", "content": user_message}
+            ],
             temperature=self.temperature,
+            top_p=self.top_p,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
             max_tokens=self.max_tokens
         )
 
         print("AI回答文本：")
-        print(response['choices'][0]['text'].strip())
+        print(response.choices[0].message.content)
 
         print("AI全部回复內容：")
         print(response)
 
-        return response['choices'][0]['text'].strip()
-
-    def add_msg(self, text):
-        self.prompt.add_msg(text)
+        return response.choices[0].message.content
 
 
 class ChatGPT3TelegramBot:
@@ -73,7 +52,7 @@ class ChatGPT3TelegramBot:
     # Help menu
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(
-            "/start - Start the bot\n/reset - Reset conversation\n/help - Help menu\n/send - send to bot owner\n/reply - send msg to id")
+            "/start - Start the bot\n/help - Help menu\n/send - send to bot owner\n/reply - send msg to id")
 
     async def sendMsg(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         msg = context.args[0]  # /add keyword <-- this should store the keyword
@@ -107,27 +86,8 @@ class ChatGPT3TelegramBot:
             return
 
         logging.info('Bot started')
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a Chat-GPT3 Bot, please talk to me!")
-
-    # Reset the conversation
-    async def reset(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self.is_allowed(update):
-            logging.info(f'User {update.message.from_user.name} is not allowed to reset the bot')
-            return
-
-        logging.info('Resetting the conversation...')
-        #
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Done!")
-
-    # Refresh session
-    async def refresh(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self.is_allowed(update):
-            logging.info(f'User {update.message.from_user.name} is not allowed to refresh the session')
-            return
-
-        logging.info('Refreshing session...')
-        #
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Done!")
+        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                       text="I'm a gpt-3.5-turbo-0301 Bot, please talk to me!")
 
     # React to messages
     async def prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -138,7 +98,12 @@ class ChatGPT3TelegramBot:
         logging.info(f'New message received from user {update.message.from_user.name}')
         await context.bot.send_chat_action(chat_id=update.effective_chat.id,
                                            action=telegram.constants.ChatAction.TYPING)
-
+        if update.message.voice:
+            file = await context.bot.getFile(update.message.voice.file_id)
+            print(file)  # oga 文件
+            transcription = openai.Audio.transcribe("whisper-1", file)
+            print(transcription)
+            return
         ai_reply_response = self.get_chatgpt_response(update.message.text)
 
         await context.bot.send_message(
@@ -151,10 +116,7 @@ class ChatGPT3TelegramBot:
 
     def get_chatgpt_response(self, user_message) -> dict:
         try:
-
-            # user_message # 接收问题的字词变数
-            self.chatgpt.prompt.add_msg(f"HUMAN:{user_message}?\n")
-            response = self.chatgpt.get_response()  # ChatGPT的回答
+            response = self.chatgpt.get_response(user_message)  # ChatGPT的回答
 
             print("AI回答內容：")
             print(response)
@@ -170,21 +132,20 @@ class ChatGPT3TelegramBot:
 
     def is_allowed(self, update: Update) -> bool:
 
-        allowed_chats = ""  # Please add your Telegram id between "".
+        allowed_chats = ["601632732", "6140146120"]  # Please add your Telegram id between "".
 
         return str(update.message.from_user.id) in allowed_chats  # self.config['allowed_chats']
 
     def run(self):
         # Please add your TelegramBot token between "" below.
-        application = ApplicationBuilder().token("").build()
+        application = ApplicationBuilder().token("6248080117:AAH5nAixPYjbRl8zpCNE6R3dnEp9Yb1DeMc").build()
+        application.add_handler(CommandHandler('start', self.start))
+        application.add_handler(CommandHandler('help', self.help))
         application.add_handler(CommandHandler("add", self.add))
         application.add_handler(CommandHandler("send", self.sendMsg))
         application.add_handler(CommandHandler("reply", self.replyMsg))
-        application.add_handler(CommandHandler('start', self.start))
-        application.add_handler(CommandHandler('reset', self.reset))
-        application.add_handler(CommandHandler('help', self.help))
-        application.add_handler(CommandHandler('refresh', self.refresh))
         application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), self.prompt))
+        application.add_handler(MessageHandler(filters.VOICE & (~filters.COMMAND), self.prompt))
 
         application.add_error_handler(self.error_handler)
 
