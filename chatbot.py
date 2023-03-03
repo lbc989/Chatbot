@@ -147,10 +147,12 @@ class ChatGPT3TelegramBot:
 
         application.add_error_handler(self.error_handler)
 
-        application.run_polling()
+        application.run_webhook(listen="0.0.0.0",
+                                port=int(os.getenv('PORT')),
+                                webhook_url="https://chatbot11.herokuapp.com/")
 
+        #####################################################################
 
-#####################################################################
 
 def main():
     logging.basicConfig(
