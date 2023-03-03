@@ -1,5 +1,6 @@
 import configparser
 import logging
+import os
 
 import openai
 import redis
@@ -7,7 +8,7 @@ import telegram.constants
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
-openai.api_key = "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"
+openai.api_key = os.environ['api_key']
 
 MSG_LIST_LIMIT = 20  # int(os.getenv("MSG_LIST_LIMIT", default = 20))
 
@@ -69,8 +70,8 @@ class ChatGPT3TelegramBot:
         try:
             config = configparser.ConfigParser()
             config.read('config.ini')
-            redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']),
-                                 port=(config['REDIS']['REDISPORT']))
+            redis1 = redis.Redis(host=(os.environ['HOST']), password=(os.environ['PASSWORD']),
+                                 port=(os.environ['REDISPORT']))
             logging.info(context.args[0])
             msg = context.args[0]  # /add keyword <-- this should store the keyword
             redis1.incr(msg)
@@ -138,7 +139,7 @@ class ChatGPT3TelegramBot:
 
     def run(self):
         # Please add your TelegramBot token between "" below.
-        application = ApplicationBuilder().token("6248080117:AAH5nAixPYjbRl8zpCNE6R3dnEp9Yb1DeMc").build()
+        application = ApplicationBuilder().token(os.environ['ACCESS_TOKEN']).build()
         application.add_handler(CommandHandler('start', self.start))
         application.add_handler(CommandHandler('help', self.help))
         application.add_handler(CommandHandler("add", self.add))
