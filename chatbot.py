@@ -56,7 +56,7 @@ class ChatGPT3TelegramBot:
 
     async def sendMsg(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         msg = context.args[0]  # /add keyword <-- this should store the keyword
-        await context.bot.send_message(chat_id=601632732,
+        await context.bot.send_message(chat_id="@DawnCat",
                                        text=f'{update.message.from_user.id} {update.message.from_user.name} said: ' + msg)
         await update.message.reply_text('You have sent ' + msg + ' to the owner.')
 
@@ -130,7 +130,7 @@ class ChatGPT3TelegramBot:
 
     def is_allowed(self, update: Update) -> bool:
 
-        allowed_chats = ["601632732", "6140146120"]  # Please add your Telegram id between "".
+        allowed_chats = ["@DawnCat", "6140146120"]  # Please add your Telegram id between "".
 
         return str(update.message.from_user.id) in allowed_chats  # self.config['allowed_chats']
 
