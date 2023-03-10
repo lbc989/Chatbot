@@ -130,7 +130,7 @@ class ChatGPT3TelegramBot:
 
     def is_allowed(self, update: Update) -> bool:
 
-        allowed_chats = ["@DawnCat", "6140146120", "@iamnotroy"]  # Please add your Telegram id between "".
+        allowed_chats = ["@DawnCat", "@iamnotroy"]  # Please add your Telegram id between "".
 
         return str(update.message.from_user.id) in allowed_chats or str(update.message.from_user.name) in allowed_chats  # self.config['allowed_chats']
 
